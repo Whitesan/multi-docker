@@ -1,4 +1,4 @@
-name: Deploy MDocker
+name: Deploy MultiDocker
 on:
   push:
     branches:
@@ -22,3 +22,18 @@ jobs:
       - run: docker push whitesani/multi-nginx
       - run: docker push whitesani/multi-server
       - run: docker push whitesani/multi-worker
+
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: multi-gh
+          environment_name: Multigh-env
+          existing_bucket_name: elasticbeanstalk-us-east-1-923445559289
+          region: us-east-1
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
